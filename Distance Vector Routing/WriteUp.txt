@@ -1,0 +1,35 @@
+Programming Assignment 3 - WriteUp
+Venkatesh Raizaday
+
+Data Structure:-
+Nodes:-
+Nodes have been assigned specific index when read from config file and are accessed using the same index throughout the program. The index - ip address mapping is in the n x n character array nodes. The function returnIndex returns the index corresponding to an ip address.
+
+Neighbouring Nodes:-
+While reading the config file an array of integers is initialized to know which node is neighbour of the current node. The value 1 denotes that the node is a neighbour and value 0 denotes otherwise.
+
+Graph:-
+A graph has been implemented using adjacency matrix. In this matrix for every edge between two nodes i and j, the index (i,j) and (j,i) contain the cost for the path.
+
+Routing Table:-
+The routing table is an array of structure route_entry. This array contains an entry for each node in the system including itself. Each entry includes: Destination, NextHop, Cost and TTL, where destination and nexthop are basically indexes of the corresponding nodes. The TTL for non neighbouring nodes is -1.
+
+
+Multi-threading:-
+Whole program is being run by 3 threads in total:-
+ - Sending periodic advertisement: After sleeping for the designated period of time this thread calls send_advertisement routine to send current routing table to the neighbours.
+ - TTL Handlers: Each neighbour has an individual thread to update its TTL in the routing table after each second. This thread also changes the cost of the node to infinity when TTL becomes 0 and calls send_advertisement to update this info to all other neighbours.
+ - Main Thread: This thread handles all the incoming messages from the neighbouring nodes and updates the adjacency list and routing table using the information from the incoming messages. Then it sends an update to all neighbours if there is a change in its routing table and resets the Manage_advertisemnt thread. It also resets the Manage_TTL thread of a node when it recieves a message from a neighbouring node.
+* I tried to use shared variables for updating TTL from main thread when a message is recieved but segmentation fault occured even after using Mutex. Hence i had to change the architecture to each node having its own thread.
+
+
+Time Taken:-
+ - Establish Routes: It takes maximum 2 exchanges of messages for nodes to set up their routing tables correctly. Time: 2.36 seconds*
+ - Converge to a steady state after node goes down: Since an advertisement is sent as soon as the TTL of a neighbouring nodes exprires, it takes only 1 exchange of messages to reach a steady state. When split horizon is not used the system steadies down in an incorrect state most of the times or has the count to infinity problem. Time(with split horizon): 3.81 seconds*
+** The time metioned is average time with networks being of size 4-6 node.
+
+
+How to run:-
+Compile: gcc -pthread DistanceVector.c
+Run: ./a.out <config file> <port number> <TTL> <Infinity> <Period>
+Several warnings will be shown on compilation, ignore them.
